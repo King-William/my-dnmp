@@ -16,6 +16,9 @@ echo '</ul>';
 echo '<h2>已安装扩展</h2>';
 printExtensions();
 
+echo '<h2>phpinfo</h2>';
+echo phpinfo();
+
 
 /**
  * 获取MySQL版本

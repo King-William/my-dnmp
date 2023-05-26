@@ -8,20 +8,11 @@ ARG CONTAINER_PACKAGE_URL
 
 RUN if [ $CONTAINER_PACKAGE_URL ] ; then sed -i "s/dl-cdn.alpinelinux.org/${CONTAINER_PACKAGE_URL}/g" /etc/apk/repositories ; fi
 
+
 COPY ./extensions /tmp/extensions
 WORKDIR /tmp/extensions
 RUN chmod +x install.sh \
-    && sh install.sh \
-    && rm -rf /tmp/extensions
-
-
-# RUN apk add git gcc g++ make cmake gfortran libffi-dev openssl-dev libtool autoconf libc-dev vim libexecinfo-dev
-
-# RUN cd /tmp && wget https://github.com/zephir-lang/zephir/releases/download/0.17.0/zephir.phar && mv zephir.phar /usr/local/bin && cd /usr/local/bin/ && mv zephir.phar zephir && chmod a+x zephir
-
-# phalcon
-# RUN cd /tmp && git clone https://github.com/phalcon/cphalcon
-# RUN cd cphalcon && git checkout tags/v3.2.4 ./ && cd build && ./install
+    && sh install.sh
 
 ADD ./extensions/install-php-extensions  /usr/local/bin/
 
@@ -32,14 +23,15 @@ RUN apk --no-cache add tzdata \
     && echo "$TZ" > /etc/timezone
 
 
-# Fix: https://github.com/docker-library/php/issues/240
-RUN apk add gnu-libiconv libstdc++ --no-cache --repository http://${CONTAINER_PACKAGE_URL}/alpine/edge/community/ --allow-untrusted
+# Fix: https://github.com/docker-library/php/issues/1121
+RUN apk add --no-cache --repository http://${CONTAINER_PACKAGE_URL}/alpine/v3.13/community/ gnu-libiconv=1.15-r3
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
 
 # Install composer and change it's cache home
-RUN curl -o /usr/bin/composer https://mirrors.aliyun.com/composer/composer.phar \
-    && chmod +x /usr/bin/composer
+RUN chmod +x install-composer.sh \
+    && sh install-composer.sh \
+    && rm -rf /tmp/extensions
 ENV COMPOSER_HOME=/tmp/composer
 
 # php image's www-data user uid & gid are 82, change them to 1000 (primary user)
